@@ -34,7 +34,7 @@ dtTest <- data.table(read.table(file.path(path,d,'test','X_test.txt')))
 dt <- rbind(dtTrain,dtTest)
 remove(dtTrain,dtTest)
 
-#merge into one table subject/activity/feature
+#merge into one table
 dt <- cbind(dtSubj,dt)
 setkey(dt,Subject,Activity)
 remove(dtSubj)
@@ -46,4 +46,24 @@ dtFeats <- dtFeats[grepl("mean\\(\\)|std\\(\\)",ftName)]
 dtFeats$ftCode <- paste('V', dtFeats$ftNum, sep = "")
 dt <- dt[,c(key(dt), dtFeats$ftCode),with=F]
 
+#rename columns
+setnames(dt, old=dtFeats$ftCode, new=as.character(dtFeats$ftName))
 
+#read activity names
+dtActNames <- data.table(read.table(file.path(path, d, 'activity_labels.txt')))
+names(dtActNames) <- c('Activity','ActivityName')
+dt <- merge(dt,dtActNames,by='Activity')
+remove(dtActNames)
+
+dtTidy <- dt %>% group_by(Subject, ActivityName) %>% summarise_each(funs(mean))
+dtTidy$Activity <- NULL
+
+names(dtTidy) <- gsub('^t', 'time', names(dtTidy))
+names(dtTidy) <- gsub('^f', 'frequency', names(dtTidy))
+names(dtTidy) <- gsub('Acc', 'Accelerometer', names(dtTidy))
+names(dtTidy) <- gsub('Gyro','Gyroscope', names(dtTidy))
+names(dtTidy) <- gsub('mean[(][)]','Mean',names(dtTidy))
+names(dtTidy) <- gsub('std[(][)]','Std',names(dtTidy))
+names(dtTidy) <- gsub('-','',names(dtTidy))
+
+write.table(dtTidy, file.path(path, 'tidy.txt'), row.names=FALSE)
