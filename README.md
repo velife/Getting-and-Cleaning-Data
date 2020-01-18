@@ -1,5 +1,4 @@
-# Getting-and-Cleaning-Data
-Getting and Cleaning Data Course Project
+# Getting and Cleaning Data Course Project
 
 Review criteria
 > 1. The submitted data set is tidy.
